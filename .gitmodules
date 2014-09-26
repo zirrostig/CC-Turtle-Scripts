@@ -1,0 +1,3 @@
+[submodule "lib/cliargs"]
+	path = lib/cliargs
+	url = https://github.com/amireh/lua_cliargs.git
