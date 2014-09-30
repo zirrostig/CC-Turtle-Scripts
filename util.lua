@@ -92,6 +92,71 @@ function dig(dir, ignoreSpace)
 	return true
 end
 
+function digG(dir, num, ignoreSpace)
+	if num == nil then num = 1 end
+	if ignoreSpace == nil then ignoreSpace = false end
+
+	for i=1,num do
+		if not dig(dir, ignoreSpace) then
+			return false
+		end
+		m.g(dir)
+	end
+	return true
+end
+
+
+function digGT(xn,yn,zn,dn,ignoreSpace,yFirst)
+	if xn == nil then x = 0 end
+	if yn == nil then y = 0 end
+	if zn == nil then z = 0 end
+	if dn == nil then dn = 1 end
+	if ignoreSpace == nil then ignoreSpace = false end
+	if yFirst == nil then yFirst = true end
+
+	while x ~= xn or y ~= yn or z ~= zn do
+		local moved = false
+		if yFirst then
+			if yn < y then
+				moved = digG('D', y - yn, ignoreSpace) or moved
+			else
+				moved = digG('U', yn - y, ignoreSpace) or moved
+			end
+		end
+
+		if xn < x then
+			m.face(2)
+			moved = digG('F', x - xn, ignoreSpace) or moved
+		else
+			m.face(0)
+			moved = digG('F', xn - x, ignoreSpace) or moved
+		end
+
+		if zn < z then
+			m.face(3)
+			moved = digG('F', z - xn, ignoreSpace) or moved
+		else
+			m.face(1)
+			moved = digG('F', zn - z, ignoreSpace) or moved
+		end
+
+		if not yFirst then
+			if yn < y then
+				moved = digG('D', y - yn, ignoreSpace) or moved
+			else
+				moved = digG('U', yn - y, ignoreSpace) or moved
+			end
+		end
+
+		if not moved then
+			print("I'm stuck")
+			return false
+		end
+	end
+	face(dn)
+end
+
+
 function emptyStuff(chest_count, dir)
 	if chest_count == nil then
 		chest_count = 1
