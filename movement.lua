@@ -17,7 +17,7 @@ function tr(num)
 	end
 	for i = 1,num do
 		turtle.turnRight()
-		d = math.fmod((d - 1) + 4, 4) -- add 4 so that it stays positive
+		d = math.fmod(d + 3, 4) -- add 4 so that it stays positive
 	end
 end
 
@@ -126,7 +126,7 @@ function gt(xn,yn,zn,dn)
 
 		if zn < z then
 			face(3)
-			moved = g('F', z - xn) or moved
+			moved = g('F', z - zn) or moved
 		else
 			face(1)
 			moved = g('F', zn - z) or moved
@@ -140,10 +140,11 @@ function gt(xn,yn,zn,dn)
 
 		if not moved then
 			print("I'm stuck")
-			break
+			return false
 		end
 	end
 	face(dn)
+	return true
 end
 
 function setPos(xn,yn,zn,dn)

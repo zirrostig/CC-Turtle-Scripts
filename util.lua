@@ -1,7 +1,4 @@
 -- http://pastebin.com/safsqGeE
-os.loadAPI('movement')
-local m = movement
-
 function cmpDir(dir)
 	if dir == 'U' then
 		return turtle.compareUp()
@@ -92,7 +89,7 @@ function dig(dir, ignoreSpace)
 	return true
 end
 
-function digG(dir, num, ignoreSpace)
+function digG(m, dir, num, ignoreSpace)
 	if num == nil then num = 1 end
 	if ignoreSpace == nil then ignoreSpace = false end
 
@@ -106,7 +103,7 @@ function digG(dir, num, ignoreSpace)
 end
 
 
-function digGT(xn,yn,zn,dn,ignoreSpace,yFirst)
+function digGT(m,xn,yn,zn,dn,ignoreSpace,yFirst)
 	if xn == nil then x = 0 end
 	if yn == nil then y = 0 end
 	if zn == nil then z = 0 end
@@ -114,37 +111,38 @@ function digGT(xn,yn,zn,dn,ignoreSpace,yFirst)
 	if ignoreSpace == nil then ignoreSpace = false end
 	if yFirst == nil then yFirst = true end
 
+	local x,y,z,d = m.getPos()
 	while x ~= xn or y ~= yn or z ~= zn do
 		local moved = false
 		if yFirst then
 			if yn < y then
-				moved = digG('D', y - yn, ignoreSpace) or moved
+				moved = digG(m, 'D', y - yn, ignoreSpace) or moved
 			else
-				moved = digG('U', yn - y, ignoreSpace) or moved
+				moved = digG(m, 'U', yn - y, ignoreSpace) or moved
 			end
 		end
 
 		if xn < x then
 			m.face(2)
-			moved = digG('F', x - xn, ignoreSpace) or moved
+			moved = digG(m, 'F', x - xn, ignoreSpace) or moved
 		else
 			m.face(0)
-			moved = digG('F', xn - x, ignoreSpace) or moved
+			moved = digG(m, 'F', xn - x, ignoreSpace) or moved
 		end
 
 		if zn < z then
 			m.face(3)
-			moved = digG('F', z - xn, ignoreSpace) or moved
+			moved = digG(m, 'F', z - xn, ignoreSpace) or moved
 		else
 			m.face(1)
-			moved = digG('F', zn - z, ignoreSpace) or moved
+			moved = digG(m, 'F', zn - z, ignoreSpace) or moved
 		end
 
 		if not yFirst then
 			if yn < y then
-				moved = digG('D', y - yn, ignoreSpace) or moved
+				moved = digG(m, 'D', y - yn, ignoreSpace) or moved
 			else
-				moved = digG('U', yn - y, ignoreSpace) or moved
+				moved = digG(m, 'U', yn - y, ignoreSpace) or moved
 			end
 		end
 
@@ -152,12 +150,13 @@ function digGT(xn,yn,zn,dn,ignoreSpace,yFirst)
 			print("I'm stuck")
 			return false
 		end
+		x,y,z,d = m.getPos()
 	end
-	face(dn)
+	m.face(dn)
 end
 
 
-function emptyStuff(chest_count, dir)
+function emptyStuff(m, chest_count, dir)
 	if chest_count == nil then
 		chest_count = 1
 	end

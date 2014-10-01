@@ -3,8 +3,8 @@
 os.loadAPI("movement")
 os.loadAPI("util")
 os.loadAPI("structures")
-local m = movement
 local u = util
+local m = movement
 local s = structures
 
 function tunnel(w, h, d, chests, chestD)
@@ -51,7 +51,7 @@ function tunnel(w, h, d, chests, chestD)
 		if not u.dig('F', ignoreSpace) then
 			local x,y,z,d = m.getPos()
 			m.gt(sx,sy,sz,sd)
-			u.emptyStuff(chests, chestD)
+			u.emptyStuff(m, chests, chestD)
 			m.gt(x,y,z,d)
 		end
 		m.g('F')
@@ -67,7 +67,7 @@ function tunnel(w, h, d, chests, chestD)
 				if not u.dig('D', ignoreSpace) then
 					local x,y,z,d = m.getPos()
 					m.gt(sx,sy,sz,sd)
-					u.emptyStuff(chests, chestD)
+					u.emptyStuff(m, chests, chestD)
 					m.gt(x,y,z,d)
 				end
 			end
@@ -76,7 +76,7 @@ function tunnel(w, h, d, chests, chestD)
 				if not u.dig('U', ignoreSpace) then
 					local x,y,z,d = m.getPos()
 					m.gt(sx,sy,sz,sd)
-					u.emptyStuff(chests, chestD)
+					u.emptyStuff(m, chests, chestD)
 					m.gt(x,y,z,d)
 				end
 			end
@@ -85,7 +85,7 @@ function tunnel(w, h, d, chests, chestD)
 				if not u.dig('F', ignoreSpace) then
 					local x,y,z,d = m.getPos()
 					m.gt(sx,sy,sz,sd)
-					u.emptyStuff(chests, chestD)
+					u.emptyStuff(m, chests, chestD)
 					m.gt(x,y,z,d)
 				end
 				m.g('F')
@@ -103,7 +103,7 @@ function tunnel(w, h, d, chests, chestD)
 	m.gt(sx,sy,sz,sd)
 
 	if not ignoreSpace then
-		u.emptyStuff(chests, chestD)
+		u.emptyStuff(m, chests, chestD)
 	end
 end
 
@@ -130,42 +130,49 @@ function quarry(w, l, d, chests, chestD)
 
 
 	-- Begin quarrying
-	local yf = sy + d
+	local yf = sy - d
 	local colDir = sd -- Start going away
 	local rowDir = math.fmod(sd + 3, 4) -- Start going right
-
 	while m.getY() > yf do
-		local y = m.getY()
 		local mineUp,mineDown = false,false
 
-		while not u.digG('D', 1, ignoreSpace) do -- Go down at least 1
+		while not u.digG(m, 'D', 1, ignoreSpace) do -- Go down at least 1
 			local xt,yt,zt,dt = m.getPos()
 			m.gt(sx,sy,sz,sd)
-			u.emptyStuff(chests, chestD)
+			if not u.emptyStuff(m, chests, chestD) then
+				print("ERROR: Can't get back to start")
+				return false
+			end
 			m.g('D')
-			m.digGT(xt,yt,zt,dt)
+			u.digGT(m,xt,yt,zt,dt)
 		end
 
-		if y > yf - 2 then -- Mine Above
-			while not u.digG('D', 1, ignoreSpace) do
+		if m.getY() > yf then -- Mine Above
+			while not u.digG(m, 'D', 1, ignoreSpace) do
 				local xt,yt,zt,dt = m.getPos()
 				m.g('U')
 				m.gt(sx,sy,sz,sd)
-				u.emptyStuff(chests, chestD)
+				if not u.emptyStuff(m, chests, chestD) then
+					print("ERROR: Can't get back to start")
+					return false
+				end
 				m.g('D')
-				m.digGT(xt,yt,zt,dt)
+				u.digGT(m,xt,yt,zt,dt)
 			end
 			mineUp = true
 		end
 
-		if y > yf - 1 then -- Mine Below
+		if m.getY() > yf then -- Mine Below
 			while not u.dig('D', ignoreSpace) do
 				local xt,yt,zt,dt = m.getPos()
-				if m.getY() + 2 < ys then m.g('U', 2) end
+				if m.getY() + 2 < sy then m.g('U', 2) end
 				m.gt(sx,sy,sz,sd)
-				u.emptyStuff(chests, chestD)
+				if not u.emptyStuff(m, chests, chestD) then
+					print("ERROR: Can't get back to start")
+					return false
+				end
 				m.g('D')
-				m.digGT(xt,yt,zt,dt)
+				u.digGT(m,xt,yt,zt,dt)
 			end
 			mineDown = true
 		end
@@ -179,15 +186,18 @@ function quarry(w, l, d, chests, chestD)
 					while not u.dig('U', ignoreSpace) do
 						local xt,yt,zt,dt = m.getPos()
 						if z ~= 1 then m.g('B') end
-						if m.getY() + 2 < ys then
+						if m.getY() + 2 < sy then
 							m.g('U', 2)
-						elseif m.getY() + 1 < ys then
+						elseif m.getY() + 1 < sy then
 							m.g('U')
 						end
 						m.gt(sx,sy,sz,sd)
-						u.emptyStuff(chests, chestD)
+						if not u.emptyStuff(m, chests, chestD) then
+							print("ERROR: Can't get back to start")
+							return false
+						end
 						m.g('D')
-						m.digGT(xt,yt,zt,dt)
+						u.digGT(m,xt,yt,zt,dt)
 					end
 				end
 
@@ -195,31 +205,37 @@ function quarry(w, l, d, chests, chestD)
 					while not u.dig('D', ignoreSpace) do
 						local xt,yt,zt,dt = m.getPos()
 						if z ~= 1 then m.g('B') end
-						if m.getY() + 2 < ys then
+						if m.getY() + 2 < sy then
 							m.g('U', 2)
-						elseif m.getY() + 1 < ys then
+						elseif m.getY() + 1 < sy then
 							m.g('U')
 						end
 						m.gt(sx,sy,sz,sd)
-						u.emptyStuff(chests, chestD)
+						if not u.emptyStuff(m, chests, chestD) then
+							print("ERROR: Can't get back to start")
+							return false
+						end
 						m.g('D')
-						m.digGT(xt,yt,zt,dt)
+						u.digGT(m,xt,yt,zt,dt)
 					end
 				end
 
 				if z < l then
-					while not u.digG('F', 1, ignoreSpace) do
+					while not u.digG(m,'F', 1, ignoreSpace) do
 						local xt,yt,zt,dt = m.getPos()
 						if z ~= 1 then m.g('B') end
-						if m.getY() + 2 < ys then
+						if m.getY() + 2 < sy then
 							m.g('U', 2)
-						elseif m.getY() + 1 < ys then
+						elseif m.getY() + 1 < sy then
 							m.g('U')
 						end
 						m.gt(sx,sy,sz,sd)
-						u.emptyStuff(chests, chestD)
+						if not u.emptyStuff(m, chests, chestD) then
+							print("ERROR: Can't get back to start")
+							return false
+						end
 						m.g('D')
-						m.digGT(xt,yt,zt,dt)
+						u.digGT(m,xt,yt,zt,dt)
 					end
 				end
 			end
@@ -229,17 +245,20 @@ function quarry(w, l, d, chests, chestD)
 
 			if x < w then
 				-- End of column, turn and move to next
-				while not u.digG('F', 1, ignoreSpace) do
+				while not u.digG(m,'F', 1, ignoreSpace) do
 					local xt,yt,zt,dt = m.getPos()
-					if m.getY() + 2 < ys then
+					if m.getY() + 2 < sy then
 						m.g('U', 2)
-					elseif m.getY() + 1 < ys then
+					elseif m.getY() + 1 < sy then
 						m.g('U')
 					end
 					m.gt(sx,sy,sz,sd)
-					u.emptyStuff(chests, chestD)
+					if not u.emptyStuff(m, chests, chestD) then
+						print("ERROR: Can't get back to start")
+						return false
+					end
 					m.g('D')
-					m.digGT(xt,yt,zt,dt)
+					u.digGT(m,xt,yt,zt,dt)
 				end
 			end
 
@@ -254,11 +273,16 @@ function quarry(w, l, d, chests, chestD)
 	end
 
 	-- Return home
-	u.digGT(sx,sy,sz,sd,ignoreSpace)
+	u.digGT(m,sx,sy,sz,sd,ignoreSpace)
 
 	if not ignoreSpace then
-		u.emptyStuff(chests, chestD)
+		if not u.emptyStuff(m, chests, chestD) then
+			print("ERROR: Can't get back to start")
+			return false
+		end
 	end
+
+	m.face(sd)
 
 end
 
